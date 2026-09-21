@@ -23,7 +23,7 @@
 3. 输入仓库地址：
 
    ```text
-   https://github.com/yanxu-orange/lantai-benmo
+   https://github.com/yanxu-orange/ST-Orange-Lantai-Benmo
    ```
 
 4. 安装完成后刷新 SillyTavern。

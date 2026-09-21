@@ -461,6 +461,9 @@ export function mountPluginShell({ documentRef = document, getContext, memoryLib
     state.summaryPromptTextDraft = null;
     state.summaryCustomPromptDraft = null;
     state.summaryEventLibraryDraft = null;
+    state.summaryEventLibraryMulti = false;
+    state.summaryEventLibrarySelected = new Set();
+    state.summaryEventLibraryEditingIndex = null;
     state.eventLibraryReorderFeedback = null;
     state.fictionalTermOpenSchemeIds = new Set();
     const windowRef = documentRef.defaultView;
@@ -2834,6 +2837,7 @@ export function mountPluginShell({ documentRef = document, getContext, memoryLib
     }
     function loadSummaryEventLibraryDraft() {
         state.summaryEventLibraryDraft = createSummaryEventLibraryDraft(summarySettings());
+        state.summaryEventLibraryMulti = false;
         state.summaryEventLibrarySelected = new Set();
         state.summaryEventLibraryEditingIndex = null;
         state.summarySettingsMessage = '';
@@ -2934,7 +2938,9 @@ export function mountPluginShell({ documentRef = document, getContext, memoryLib
         }
         if (routeId === 'settings.summary.events') {
             state.summaryEventLibraryDraft = null;
+            state.summaryEventLibraryMulti = false;
             state.summaryEventLibrarySelected = new Set();
+            state.summaryEventLibraryEditingIndex = null;
         }
         if (routeId === 'settings.summary.cleaning') {
             state.summaryCleaningDraft = null;
@@ -3147,15 +3153,23 @@ export function mountPluginShell({ documentRef = document, getContext, memoryLib
     function renderSummaryEventLibrary() {
         const draft = state.summaryEventLibraryDraft;
         if (!draft) { router.back('settings.summary'); render(); return; }
+        state.summaryEventLibraryMulti ??= false;
         state.summaryEventLibrarySelected ??= new Set();
+        const multi = state.summaryEventLibraryMulti;
         const entries = draft.entries.map((item, index) => {
-            const open = state.summaryEventLibraryEditingIndex === index;
+            const open = !multi && state.summaryEventLibraryEditingIndex === index;
             const name = item.name || '新事件词';
             const selected = state.summaryEventLibrarySelected.has(index);
             const enabled = item.enabled !== false;
-            return `<li class="tkm-event-library-item" data-event-library-index="${index}"><div class="tkm-event-library-row"><label class="tkm-event-library-select"><input type="checkbox" data-action="select-event-library-item" data-index="${index}" ${selected ? 'checked' : ''} aria-label="选择「${escapeHtml(name)}」用于批量操作"></label><button type="button" class="tkm-event-library-toggle" data-action="toggle-event-library-item" data-index="${index}" aria-expanded="${open}"><span>${index + 1}. ${escapeHtml(name)}</span><span aria-hidden="true">${open ? '⌃' : '⌄'}</span></button><button type="button" class="tkm-compact-switch tkm-event-library-enabled ${enabled ? 'is-on' : ''}" role="switch" aria-checked="${enabled}" data-action="set-event-library-enabled" data-index="${index}" data-operation="${enabled ? 'disable' : 'enable'}" aria-label="${enabled ? '停用' : '启用'}事件词「${escapeHtml(name)}」"><i aria-hidden="true"></i></button></div>${open ? `<div class="tkm-event-library-fields"><label><span>事件词</span><input class="tkm-summary-field-control" type="text" data-event-library-field="name" data-index="${index}" value="${escapeHtml(item.name)}"></label><label><span>解释</span><textarea class="tkm-summary-field-control" rows="4" data-event-library-field="definition" data-index="${index}">${escapeHtml(item.definition)}</textarea></label><div class="tkm-event-library-row-actions"><button type="button" data-action="move-event-library-up" data-index="${index}" ${index === 0 ? 'disabled' : ''}>上移</button><button type="button" data-action="move-event-library-down" data-index="${index}" ${index === draft.entries.length - 1 ? 'disabled' : ''}>下移</button><button type="button" class="danger" data-action="delete-event-library-item" data-index="${index}">删除</button></div></div>` : `<p class="tkm-event-library-preview">${escapeHtml(item.definition)}</p>`}</li>`;
+            const copy = `<span class="tkm-event-library-copy"><strong>${index + 1}. ${escapeHtml(name)}</strong><small>${escapeHtml(item.definition)}</small></span>`;
+            if (multi) return `<li class="tkm-event-library-item tkm-event-library-item--selectable ${selected ? 'is-selected' : ''}" data-event-library-index="${index}"><button type="button" class="tkm-event-library-select-row" data-action="select-event-library-item" data-index="${index}" aria-pressed="${selected}" aria-label="${selected ? '取消选择' : '选择'}事件词「${escapeHtml(name)}」"><span class="tkm-card-checkbox" aria-hidden="true">${selected ? '✓' : ''}</span>${copy}</button></li>`;
+            return `<li class="tkm-event-library-item ${open ? 'is-open' : ''}" data-event-library-index="${index}"><div class="tkm-event-library-row"><button type="button" class="tkm-event-library-toggle" data-action="toggle-event-library-item" data-index="${index}" aria-expanded="${open}">${copy}<i aria-hidden="true"></i></button><button type="button" class="tkm-event-library-switch ${enabled ? 'is-on' : ''}" role="switch" aria-checked="${enabled}" data-action="set-event-library-enabled" data-index="${index}" data-operation="${enabled ? 'disable' : 'enable'}" aria-label="${enabled ? '停用' : '启用'}事件词「${escapeHtml(name)}」"><i aria-hidden="true"></i></button></div>${open ? `<div class="tkm-event-library-fields"><label><span>事件词</span><input class="tkm-summary-field-control" type="text" data-event-library-field="name" data-index="${index}" value="${escapeHtml(item.name)}"></label><label><span>解释</span><textarea class="tkm-summary-field-control" rows="4" data-event-library-field="definition" data-index="${index}">${escapeHtml(item.definition)}</textarea></label><div class="tkm-event-library-row-actions"><button type="button" data-action="move-event-library-up" data-index="${index}" ${index === 0 ? 'disabled' : ''}>上移</button><button type="button" data-action="move-event-library-down" data-index="${index}" ${index === draft.entries.length - 1 ? 'disabled' : ''}>下移</button><button type="button" class="danger" data-action="delete-event-library-item" data-index="${index}">删除</button></div></div>` : ''}</li>`;
         }).join('');
-        shell.innerHTML = `${focusedHeader('事件词库', 'tkm-event-library-form')}<main class="tkm-shell__body tkm-settings-child tkm-event-library-editor" data-tkm-scroll>${summarySettingsStatus()}<form id="tkm-event-library-form" data-tkm-form="event-library" novalidate><div class="tkm-event-library-toolbar"><span>${draft.useDefault ? '使用默认' : '自定义'} · ${draft.entries.length} 条</span><button type="button" class="tkm-inline-link" data-action="restore-event-library">恢复默认</button><button type="button" class="tkm-inline-link" data-action="add-event-library-item">＋ 新增事件词</button></div><p class="tkm-visually-hidden" role="status" aria-live="polite" data-event-library-reorder-status></p><div class="tkm-event-library-batch"><span>已选 ${state.summaryEventLibrarySelected.size} 条</span><button type="button" data-action="select-all-event-library">全选</button><button type="button" data-action="clear-event-library-selection">清空</button>${[["enable","启用"],["disable","停用"],["delete","删除"]].map(([operation,label]) => `<button type="button" data-action="batch-event-library" data-operation="${operation}" ${state.summaryEventLibrarySelected.size ? '' : 'disabled'}>${label}</button>`).join('')}</div><ol class="tkm-event-library-list">${entries || '<li class="tkm-settings-empty"><strong>事件词库为空</strong><span>保存后，新总结不会选择事件关键词。</span></li>'}</ol></form></main>`;
+        const toolbar = multi
+            ? `<section class="tkm-selection-panel tkm-event-library-selection-panel" aria-label="事件词批量选择"><div class="tkm-selection-panel__heading"><strong>已选 ${state.summaryEventLibrarySelected.size} 条事件词</strong><span><button type="button" data-action="select-all-event-library">全选</button><button type="button" data-action="clear-event-library-selection">清空</button><button type="button" data-action="toggle-event-library-multi">退出</button></span></div></section>`
+            : `<div class="tkm-event-library-toolbar"><span>${draft.useDefault ? '使用默认' : '自定义'} · ${draft.entries.length} 条</span><button type="button" class="tkm-inline-link" data-action="restore-event-library">恢复默认</button><button type="button" class="tkm-inline-link" data-action="add-event-library-item">＋ 新增事件词</button><button type="button" class="tkm-icon-action" data-action="toggle-event-library-multi" aria-label="多选事件词">${MULTI_ICON}</button></div>`;
+        const batchNav = multi ? `<nav class="tkm-shell__nav tkm-event-library-batch-nav" aria-label="事件词批量操作">${[["enable","启用"],["disable","停用"],["delete","删除"]].map(([operation,label]) => `<button type="button" data-action="batch-event-library" data-operation="${operation}" ${state.summaryEventLibrarySelected.size ? '' : 'disabled'}>${label}</button>`).join('')}</nav>` : '';
+        shell.innerHTML = `${focusedHeader('事件词库', 'tkm-event-library-form')}<main class="tkm-shell__body tkm-settings-child tkm-event-library-editor" data-tkm-scroll>${summarySettingsStatus()}<form id="tkm-event-library-form" data-tkm-form="event-library" novalidate>${toolbar}<p class="tkm-visually-hidden" role="status" aria-live="polite" data-event-library-reorder-status></p><ol class="tkm-event-library-list">${entries || '<li class="tkm-settings-empty"><strong>事件词库为空</strong><span>保存后，新总结不会选择事件关键词。</span></li>'}</ol></form></main>${batchNav}`;
     }
 
     async function cancelSummaryReview({ removingLast = false } = {}) {
@@ -3680,7 +3694,9 @@ export function mountPluginShell({ documentRef = document, getContext, memoryLib
                 const nextSummary = applySummaryEventLibraryDraft(summarySettings(), state.summaryEventLibraryDraft);
                 const savedSummary = await commitSummarySettings(nextSummary);
                 state.summaryEventLibraryDraft = createSummaryEventLibraryDraft(savedSummary);
+                state.summaryEventLibraryMulti = false;
                 state.summaryEventLibrarySelected = new Set();
+                state.summaryEventLibraryEditingIndex = null;
                 dirty.setBaseline('summary-event-library', state.summaryEventLibraryDraft);
                 showSummarySettingsMessage('事件词库已保存。');
             } catch (error) { showSummarySettingsMessage(error?.message || '事件词库保存失败。', 'error'); }
@@ -4824,6 +4840,7 @@ export function mountPluginShell({ documentRef = document, getContext, memoryLib
             await renderKeepingCalendarPosition(); return;
         }
         if (action === 'select-event-library-item' && state.summaryEventLibraryDraft) {
+            if (!state.summaryEventLibraryMulti) return;
             state.summaryEventLibrarySelected ??= new Set();
             const i = Number(button.dataset.index);
             if (state.summaryEventLibrarySelected.has(i)) state.summaryEventLibrarySelected.delete(i);
@@ -4843,7 +4860,14 @@ export function mountPluginShell({ documentRef = document, getContext, memoryLib
             await renderKeepingEventLibraryPosition(); return;
         }
         if (action === 'clear-event-library-selection') { state.summaryEventLibrarySelected = new Set(); await renderKeepingEventLibraryPosition(); return; }
+        if (action === 'toggle-event-library-multi' && state.summaryEventLibraryDraft) {
+            state.summaryEventLibraryMulti = !state.summaryEventLibraryMulti;
+            state.summaryEventLibrarySelected = new Set();
+            state.summaryEventLibraryEditingIndex = null;
+            await renderKeepingEventLibraryPosition(); return;
+        }
         if (action === 'toggle-event-library-item' && state.summaryEventLibraryDraft) {
+            if (state.summaryEventLibraryMulti) return;
             const index = Number(button.dataset.index);
             if (!Number.isInteger(index) || !state.summaryEventLibraryDraft.entries[index]) return;
             state.summaryEventLibraryEditingIndex = state.summaryEventLibraryEditingIndex === index ? null : index;
