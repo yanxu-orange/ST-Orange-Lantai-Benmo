@@ -1,0 +1,71 @@
+{
+  "theme": "snow-ermine",
+  "ownership": "consumer",
+  "reference": {
+    "file": "Lantai-Snow-Ermine-3.3-Layout-Fix-Candidate.html",
+    "version": "3.3",
+    "handoffDate": "2026-10-10",
+    "scriptsExecuted": false
+  },
+  "stylesheet": "theme.css",
+  "assets": [
+    {
+      "file": "assets/snow-ermine-header.png",
+      "source": "assets/snow-ermine-header.png",
+      "role": "Primary section root headers; exact original bytes",
+      "sha256": "674ff57c3841bb1ab22f786c00a2f9ac86adedb93f5149512923a77868460fb8"
+    },
+    {
+      "file": "assets/panoramic-snow-header.png",
+      "source": "assets/panoramic-snow-header.png",
+      "role": "Subpage headers only; exact original bytes",
+      "sha256": "b6960e15e58b6029848daba2d32f1ca7ff612831f9c26a933ad999eb9cecd098"
+    },
+    {
+      "file": "assets/close-snow.svg",
+      "source": "src/app/icons/close.svg",
+      "role": "Consumer-only header glyph derivative; same path, white stroke with a thin dark outline",
+      "sha256": "dd2134624d963a57de0a3b702c0747a1df3c2dfd200e7d215cb3d0e2bc8b3318"
+    },
+    {
+      "file": "assets/snow-crystal.svg",
+      "source": "Exact twelve paths and round stroke from approved candidate v2",
+      "role": "Memory card decoration only; no business semantics",
+      "sha256": "ac397db1946dad82081c73903e6a7814b0ecfe3ea090bb6ee3643349b6353765"
+    }
+  ],
+  "notes": [
+    "Consumes the preserved TASK-028 shared component, touch and forced-color layer in shared-ui/candidate.web.css; theme-specific Memphis styles are removed.",
+    "Only the root and subpage headers use scenic images; the body is an opaque cool-white/light-ice workspace. The panoramic lake backdrop is not included.",
+    "No font is embedded or downloaded. SimSun/Songti is a regular-400 reading fallback; actual availability depends on the user device.",
+    "Theme CSS does not own business data, routing, timestamps or phone/PC page structure."
+  ],
+  "stylesheets": [
+    "appearance-tokens.css",
+    "memory-tokens.css",
+    "switch-tokens.css",
+    "segment-tokens.css",
+    "theme.css",
+    "../shared-ui/appearance-format.css",
+    "memory.css",
+    "page-tokens.css",
+    "time.css",
+    "benmo.css",
+    "secondary.css"
+  ],
+  "formatContract": {
+    "ownership": "consumer-product",
+    "sharedRules": "../shared-ui/appearance-format.css",
+    "appearanceValues": "appearance-tokens.css",
+    "memoryValues": "memory-tokens.css",
+    "scope": "Existing Spring/Snow rules and final values only; theme-specific headers, motifs, states and page mappings stay local",
+    "baseline": "0.1.0-test.20261010.4",
+    "switchValues": "switch-tokens.css",
+    "segmentValues": "segment-tokens.css",
+    "pageValues": "page-tokens.css",
+    "normalAppearancePreserved": true,
+    "forcedColorsExceptions": [
+      "Three shared surfaces now follow Canvas instead of fixed white"
+    ]
+  }
+}

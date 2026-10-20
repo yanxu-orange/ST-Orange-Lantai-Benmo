@@ -1,13 +1,16 @@
 {
-  "display_name": "兰台",
-  "loading_order": 50,
+  "display_name": "兰台本末",
+  "loading_order": 100,
   "requires": [],
   "optional": [],
-  "js": "index.js",
-  "css": "style.css",
-  "generate_interceptor": "timeKeywordMemoryGenerateInterceptor",
-  "author": "yanxu-orange",
-  "version": "0.4.0-rc.1",
+  "js": "dist/index.js",
+  "generate_interceptor": "lantaiBenmoGenerationInterceptor",
+  "author": "Lantai Benmo",
+  "version": "1.0.0-beta.1",
   "homePage": "https://github.com/yanxu-orange/ST-Orange-Lantai-Benmo",
-  "auto_update": true
+  "hooks": {
+    "disable": "onDisable",
+    "delete": "onDelete",
+    "enable": "onEnable"
+  }
 }
